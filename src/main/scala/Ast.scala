@@ -1,17 +1,72 @@
 package org.sdj.turtlesloth.ast
+import org.sdj.turtlesloth._
 
 class Node
 
-class Expression extends Node
-class Statement extends Node
+trait Noop {
+  def update(state: State):State = state
+}
 
-case class Assignment(to: Variable, value: Expression) extends Statement
+class Expression extends Node with Noop {
+  def resolve(state: State):(Option[Any], State) = (None, state)
+}
 
-class Literal extends Expression
+class Statement extends Node with Noop
 
-case class StringLiteral(content: String) extends Literal
-case class NumericLiteral(value:Long) extends Literal
+
+case class Return(value: Expression) extends Statement
+case class Block(contents: Statement*) extends Statement
+case class ExpressionStatement(expression: Expression) extends Statement {
+  override def update(state: State) = expression.update(state)
+}
 
 case class Array(a: Expression*) extends Expression
 
-case class Variable(name: String) extends Expression
+case class Assignment(to: Expression, value: Expression) extends Expression
+case class Identifier(name: String) extends Expression {
+  override def resolve(state: State) = (state.globals.get(name), state)
+}
+
+case class MethodCall(method: Expression, args:List[Expression]) extends Expression {
+  override def update(state: State) = {
+    val (methodValue, state2) = method.resolve(state)
+
+    val (vals, state3) = resolveArgs(state2)
+
+    methodValue match {
+      case Some(m: Method) => updateWithMethodAndArgs(m, vals, state3)
+      case _ => throw new Exception("not a method!")
+    }
+  }
+
+  def updateWithMethodAndArgs(method:Method, args:List[Any], state: State) = {
+    val (result, updated) = method.resolve(args, state)
+
+    updated
+  }
+
+  def resolveArgs(state: State) = {
+    args.foldLeft((List[Any](), state)) { case ((l, s), exp) =>
+      val (value, updated) = exp.resolve(s)
+
+      (l ::: value.get :: Nil, updated)
+    }
+  }
+}
+
+// Identifier(println) with args:List(StringLiteral(foo))
+
+class Literal extends Expression
+
+case class StringLiteral(content: String) extends Literal {
+  override def resolve(state: State) = (Some(content), state)
+}
+
+case class NumericLiteral(value:Long) extends Literal
+case class BooleanLiteral(value: Boolean) extends Literal
+
+case object ThisExpression extends Expression
+
+case class MethodExpression(params: ParameterList, block: Block) extends Expression
+
+case class ParameterList(params: String*)
