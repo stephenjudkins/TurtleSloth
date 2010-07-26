@@ -116,10 +116,13 @@ private class Parser extends RegexParsers {
   // |	ThrowStatement
   // |	TryStatement
   lazy val statement =
+    // variableStatement |
     returnStatement |
     block |
     expressionStatement
 
+  // VariableStatement	::=	"var" VariableDeclarationList ( ";" )?
+  // lazy val variableStatement =
 
   // ReturnStatement	::=	"return" ( Expression )? ( ";" )?
   lazy val returnStatement: Parser[Return] = "return " ~> expression <~ (";"?) ^^ {(exp) =>
@@ -214,7 +217,6 @@ private class Parser extends RegexParsers {
   // |	ThrowStatement
   // |	TryStatement
 
-  // VariableStatement	::=	"var" VariableDeclarationList ( ";" )?
   // VariableDeclarationList	::=	VariableDeclaration ( "," VariableDeclaration )*
   // VariableDeclarationListNoIn	::=	VariableDeclarationNoIn ( "," VariableDeclarationNoIn )*
   // VariableDeclaration	::=	Identifier ( Initialiser )?

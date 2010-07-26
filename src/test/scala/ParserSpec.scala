@@ -58,7 +58,11 @@ class ParserSpec extends Specification {
   }
 
   "method call with multiple arguments" in {
-    "foo(spam, \"eggs\")" must parseTo(MethodCall(Identifier("foo"), List(Identifier("spam"), StringLiteral("eggs"))))
+    "foo(spam, \"eggs\")" must parseTo(
+      MethodCall(
+        Identifier("foo"), List(Identifier("spam"), StringLiteral("eggs"))
+      )
+    )
   }
 
   val fooBlock = Block(
@@ -80,6 +84,12 @@ class ParserSpec extends Specification {
         ParameterList("a"),
         Block(ExpressionStatement(MethodCall(Identifier("foo"), List(Identifier("a")))))
       )
+    )
+  }
+
+  "assignment" in {
+    "a = 5" must parseTo(
+      Assignment(Identifier("a"), NumericLiteral(5))
     )
   }
 }

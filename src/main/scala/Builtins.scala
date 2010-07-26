@@ -3,9 +3,9 @@ import org.sdj.turtlesloth._
 
 object Print extends Method {
   override def resolve(args: List[Any], state: State) = {
-    val string = args.head
+    val string = args.head.toString + "\n";
 
-    (null, state.copy(output = state.output + "%s\n".format(string)))
+    (null, state.copy(outputStrings = string :: state.outputStrings))
   }
 }
 

@@ -22,9 +22,31 @@ case class ExpressionStatement(expression: Expression) extends Statement {
 
 case class Array(a: Expression*) extends Expression
 
-case class Assignment(to: Expression, value: Expression) extends Expression
+case class Assignment(to: Expression, value: Expression) extends Expression {
+
+  override def update(state: State) = {
+    to match {
+      case Identifier(name) => assignToVariable(name, state)
+      case _ => throw new Exception("i don't know what to do here")
+    }
+  }
+
+  def assignToVariable(name: String, state: State) = {
+    val (resolvedValue, updatedState) = value.resolve(state)
+
+    updatedState.copy(
+      stack = state.stack.withUpdatedFrame(
+        state.stack.currentFrame.copy(
+          variables = state.stack.currentFrame.variables.updated(name, resolvedValue.get)
+        )
+      )
+    )
+
+  }
+}
+
 case class Identifier(name: String) extends Expression {
-  override def resolve(state: State) = (state.globals.get(name), state)
+  override def resolve(state: State) = (state.currentFrame.get(name), state)
 }
 
 case class MethodCall(method: Expression, args:List[Expression]) extends Expression {
@@ -54,7 +76,6 @@ case class MethodCall(method: Expression, args:List[Expression]) extends Express
   }
 }
 
-// Identifier(println) with args:List(StringLiteral(foo))
 
 class Literal extends Expression
 
