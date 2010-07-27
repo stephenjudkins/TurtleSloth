@@ -32,6 +32,7 @@ case class Assignment(to: Expression, value: Expression) extends Expression {
   }
 
   def assignToVariable(name: String, state: State) = {
+
     val (resolvedValue, updatedState) = value.resolve(state)
 
     updatedState.copy(
@@ -88,6 +89,28 @@ case class BooleanLiteral(value: Boolean) extends Literal
 
 case object ThisExpression extends Expression
 
-case class MethodExpression(params: ParameterList, block: Block) extends Expression
+case class MethodExpression(params: ParameterList, block: Block) extends Expression {
+  override def resolve(state: State) = (Some(method), state)
+
+  lazy val method = new Method {
+    override def resolve(args: List[Any], state: State) = {
+
+      // val locals = args.zip(params.params).foldLeft(Map[String, Any]()) { case (m, (arg, name)) => m.updated(name, arg) }
+
+      val updated = state.copy(
+        stack = Stack(blockFrame( state) :: state.stack.frames.toList: _*)
+      )
+
+      (None, updated)
+    }
+  }
+
+  def blockFrame(state: State) = {
+    state.currentFrame.copy(previous = List(), next = noop :: block.contents.toList)
+  }
+
+  lazy val noop = new Statement with Noop
+
+}
 
 case class ParameterList(params: String*)

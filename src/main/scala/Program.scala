@@ -4,7 +4,7 @@ import org.sdj.turtlesloth.builtins._
 
 class Program(block: Block) {
   lazy val initialState = new State(this, firstStack)
-  val states = Stream.iterate(initialState)(_.nextState)
+  val states = Stream.iterate(initialState)(_.nextState)//.map { (s) => println(s); s}
 
   lazy val completion = states.filter(_.isTerminated).head
 
@@ -45,7 +45,14 @@ case class State(
   }
 
   lazy val updatedState = {
-    val updated = currentStatement.update(this)
+
+    val updated = if (currentFrame.isTerminated) {
+      copy(
+        stack = Stack(stack.frames.tail: _*)
+      )
+    } else {
+      currentStatement.update(this)
+    }
 
     updated.copy(
       stack = updated.toNextStatement,
@@ -66,16 +73,16 @@ case class State(
 }
 
 object Program {
-  def fromSource(source: String):Program = {
+  def fromSource(source: String):Program = fromNode(Parser.parse(source))
 
-    val block = Parser.parse(source) match {
-      case b: Block => b
-      case s: Statement => Block(s)
-      case e: Expression => Block(ExpressionStatement(e))
-    }
+  def fromNode(node: Node) = fromBlock(node match {
+    case b: Block => b
+    case s: Statement => Block(s)
+    case e: Expression => Block(ExpressionStatement(e))
+  })
 
-    new Program(block)
-  }
+  def fromBlock(block: Block) = new Program(block)
+
 }
 
 abstract class Method {

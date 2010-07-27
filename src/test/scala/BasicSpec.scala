@@ -23,9 +23,9 @@ class BasicSpec extends Specification {
     "print(\"hello\"); print(\"world\");" must output("hello\nworld\n")
   }
 
-//  "function definition and call" in {
-//    "var f = function() { println(\"called\");} f();" must output("called\n")
-//  }
+  "method definition and call" in {
+    "f = function() { print(\"called\");} f();" must output("called\n")
+  }
 
   "assignment" in {
     "a = \"foo\";\nprint(a)" must output("foo\n")
