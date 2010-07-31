@@ -4,6 +4,8 @@ package org.sdj.turtlesloth
 object Main {
 
   def main(args: Array[String]) = {
-/*    println(Json.parse("var x = [1,2,3];"))*/
+    (1 to 5000).foreach {(i) =>
+      println(Program.fromSource("f = function() { v = \"%s\"; print(v);} f();".format(i)).completion.output)
+    }
   }
 }

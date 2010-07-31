@@ -11,22 +11,26 @@ class Expression extends Node with Noop {
   def resolve(state: State):(Option[Any], State) = (None, state)
 }
 
-class Statement extends Node with Noop
+class Statement extends Node with Noop {
+}
 
 
 case class Return(value: Expression) extends Statement
 case class Block(contents: Statement*) extends Statement
+
 case class ExpressionStatement(expression: Expression) extends Statement {
   override def update(state: State) = expression.update(state)
 }
 
-case class Array(a: Expression*) extends Expression
+
+
+case class ArrayExpression(a: Expression*) extends Expression
 
 case class Assignment(to: Expression, value: Expression) extends Expression {
 
   override def update(state: State) = {
     to match {
-      case Identifier(name) => assignToVariable(name, state)
+      case Identifier(name) => assignToVariable(name, state).toNextStatement
       case _ => throw new Exception("i don't know what to do here")
     }
   }
@@ -35,14 +39,9 @@ case class Assignment(to: Expression, value: Expression) extends Expression {
 
     val (resolvedValue, updatedState) = value.resolve(state)
 
-    updatedState.copy(
-      stack = state.stack.withUpdatedFrame(
-        state.stack.currentFrame.copy(
-          variables = state.stack.currentFrame.variables.updated(name, resolvedValue.get)
-        )
-      )
-    )
-
+    updatedState.withCurrentFrameUpdated {(currentFrame) =>
+      currentFrame.copy(variables = currentFrame.variables.updated(name, resolvedValue.get))
+    }
   }
 }
 
@@ -94,19 +93,19 @@ case class MethodExpression(params: ParameterList, block: Block) extends Express
 
   lazy val method = new Method {
     override def resolve(args: List[Any], state: State) = {
+      val shifted = state.withNextStatement
 
-      // val locals = args.zip(params.params).foldLeft(Map[String, Any]()) { case (m, (arg, name)) => m.updated(name, arg) }
-
-      val updated = state.copy(
-        stack = Stack(blockFrame( state) :: state.stack.frames.toList: _*)
+      val updated = shifted.copy(
+        stack = Stack(blockFrame(shifted) :: shifted.stack.frames.toList: _*)
       )
 
       (None, updated)
     }
+
   }
 
   def blockFrame(state: State) = {
-    state.currentFrame.copy(previous = List(), next = noop :: block.contents.toList)
+    state.currentFrame.copy(previous = List(), next = block.contents.toList)
   }
 
   lazy val noop = new Statement with Noop

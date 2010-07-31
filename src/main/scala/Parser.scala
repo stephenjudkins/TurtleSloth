@@ -93,10 +93,10 @@ private class Parser extends RegexParsers {
   lazy val argumentList: Parser[List[Expression]] = repsep(assignmentExpression, ",")
 
   // ArrayLiteral	::=	"[" ( ( Elision )? "]" | ElementList Elision "]" | ( ElementList )? "]" )
-  lazy val array: Parser[Array] = "[" ~> elementList <~"]"
+  lazy val array: Parser[ArrayExpression] = "[" ~> elementList <~"]"
   // ElementList	::=	( Elision )? AssignmentExpression ( Elision AssignmentExpression )*
-  lazy val elementList: Parser[Array] = repsep(assignmentExpression, ",") ^^ {(list) =>
-    Array(list: _*)
+  lazy val elementList: Parser[ArrayExpression] = repsep(assignmentExpression, ",") ^^ {(list) =>
+    ArrayExpression(list: _*)
   }
 
   // Statement	::=	Block

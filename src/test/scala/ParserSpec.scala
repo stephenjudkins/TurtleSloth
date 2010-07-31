@@ -31,14 +31,14 @@ class ParserSpec extends Specification {
   }
 
   "array with single element" in {
-    "[foo]" must parseTo(Array(Identifier("foo")))
+    "[foo]" must parseTo(ArrayExpression(Identifier("foo")))
   }
   "arrays" in {
-    "[1,\"foo\", 5]" must parseTo(Array(NumericLiteral(1), StringLiteral("foo"), NumericLiteral(5)))
+    "[1,\"foo\", 5]" must parseTo(ArrayExpression(NumericLiteral(1), StringLiteral("foo"), NumericLiteral(5)))
   }
 
   "arrays with spaces" in {
-    "[1, 2,   3]" must parseTo(Array(NumericLiteral(1), NumericLiteral(2), NumericLiteral(3)))
+    "[1, 2,   3]" must parseTo(ArrayExpression(NumericLiteral(1), NumericLiteral(2), NumericLiteral(3)))
   }
 
   "Identifier" in {
