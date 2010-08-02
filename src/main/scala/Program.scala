@@ -4,34 +4,45 @@ import org.sdj.turtlesloth.builtins._
 
 class Program(block: Block) {
   lazy val initialState:Option[State] = Some(new State(this, firstStack))
-  val states = Stream.iterate(initialState)(_.flatMap {(s) => s.nextState}).takeWhile(_.isDefined).flatten
+  val states = Stream.iterate(initialState)(_.flatMap {(s) => s.nextState}).takeWhile(_.isDefined).flatten//.map {(s) => println(s.prettyPrint); s}
 
-  lazy val completion = states.take(500).last
+  lazy val completion = states.take(50).last
 
   lazy val firstStack = Stack(Frame(List(), block.contents.toList, DefaultGlobals.get))
 }
 
-case class Stack(frames: Frame*) {
-  lazy val currentFrame = frames.head
-  lazy val isTerminated = frames.length == 1 && currentFrame.isTerminated
+case class Stack(currentFrame: Frame) {
+
+  lazy val frames = toList(currentFrame)
+
+  lazy val isTerminated =
+    !currentFrame.parent.isDefined &&
+    currentFrame.isTerminated
+
   lazy val currentStatement = currentFrame.current
 
-  def withUpdatedFrame(newFrame: Frame) = Stack((newFrame :: frames.tail.toList): _*)
+  def withUpdatedFrame(newFrame: Frame) = Stack(newFrame)
 
   lazy val prettyPrint = frames.map(_.prettyPrint).mkString("\n")
 
-  lazy val toNextStatement =
-    withUpdatedFrame(
-      currentFrame.copy(
-        previous = currentFrame.previous ::: currentFrame.current.toList,
-        next = currentFrame.next.tail
-      )
+  lazy val toNextStatement = withUpdatedFrame(
+    currentFrame.copy(
+      previous = currentFrame.previous ::: currentFrame.current.toList,
+      next = currentFrame.next.tail
     )
+  )
 
-  lazy val withoutTopFrame = { Stack(frames.tail: _*) }
+
+  lazy val withoutTopFrame = { Stack(currentFrame.parent.get) }
+
+  private def toList(t: Frame): List[Frame] = t.parent match {
+    case None => t :: Nil
+    case Some(next) => t :: toList(next)
+  }
+
 }
 
-case class Frame(previous: List[Statement], next: List[Statement], variables: Map[String, Any] = Map()) {
+case class Frame(previous: List[Statement], next: List[Statement], variables: Map[String, Any] = Map(), parent: Option[Frame] = None) {
   lazy val current = next.headOption
   lazy val isTerminated = next.isEmpty
 

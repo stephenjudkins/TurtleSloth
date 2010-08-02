@@ -96,7 +96,7 @@ case class MethodExpression(params: ParameterList, block: Block) extends Express
       val shifted = state.withNextStatement
 
       val updated = shifted.copy(
-        stack = Stack(blockFrame(shifted) :: shifted.stack.frames.toList: _*)
+        stack = Stack(blockFrame(shifted))
       )
 
       (None, updated)
@@ -105,7 +105,7 @@ case class MethodExpression(params: ParameterList, block: Block) extends Express
   }
 
   def blockFrame(state: State) = {
-    state.currentFrame.copy(previous = List(), next = block.contents.toList)
+    state.currentFrame.copy(previous = List(), next = block.contents.toList, parent = Some(state.currentFrame))
   }
 
   lazy val noop = new Statement with Noop
